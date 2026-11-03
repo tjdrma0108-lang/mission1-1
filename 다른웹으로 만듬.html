@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>영화 티어리스트</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans KR", Arial, sans-serif;
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    header {
+      padding: 24px 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #1f2937, #374151);
+      border-bottom: 1px solid #4b5563;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    header p {
+      margin: 0;
+      color: #d1d5db;
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding: 14px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button,
+    label.upload-label {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: #2563eb;
+      transition: 0.2s;
+      font-size: 14px;
+    }
+
+    button:hover,
+    label.upload-label:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    .btn-add {
+      background: #16a34a;
+    }
+
+    .btn-reset {
+      background: #dc2626;
+    }
+
+    .btn-small {
+      padding: 7px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    .btn-delete {
+      background: #ef4444;
+    }
+
+    .btn-image-delete {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border-radius: 50%;
+      background: rgba(220, 38, 38, 0.92);
+      font-size: 14px;
+      line-height: 24px;
+      z-index: 3;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .notice {
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: #cbd5e1;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .tier-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tier-row {
+      display: grid;
+      grid-template-columns: 180px 1fr 90px;
+      min-height: 120px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .tier-label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      border-right: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .tier-name {
+      width: 100%;
+      border: none;
+      outline: none;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: #111827;
+      background: rgba(255,255,255,0.88);
+    }
+
+    .tier-color {
+      width: 52px;
+      height: 34px;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .tier-dropzone,
+    .image-pool {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-content: flex-start;
+      min-height: 120px;
+      padding: 12px;
+      background: #111827;
+      transition: 0.2s;
+    }
+
+    .tier-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      border-left: 1px solid #374151;
+      background: #172033;
+    }
+
+    .drop-hover {
+      outline: 3px dashed #60a5fa;
+      outline-offset: -6px;
+      background: #172554;
+    }
+
+    .movie-card {
+      position: relative;
+      width: 92px;
+      height: 132px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #374151;
+      border: 2px solid #4b5563;
+      cursor: grab;
+      user-select: none;
+      transition: 0.15s;
+    }
+
+    .movie-card:hover {
+      transform: scale(1.04);
+      border-color: #93c5fd;
+    }
+
+    .movie-card:active {
+      cursor: grabbing;
+    }
+
+    .movie-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    .movie-card .movie-name {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 4px;
+      font-size: 10px;
+      color: white;
+      background: rgba(0,0,0,0.65);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pool-section {
+      margin-top: 24px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .pool-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: #273449;
+      border-bottom: 1px solid #374151;
+    }
+
+    .pool-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .pool-header span {
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    .empty-message {
+      color: #94a3b8;
+      font-size: 14px;
+      padding: 10px;
+    }
+
+    footer {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 13px;
+      padding: 20px;
+    }
+
+    @media (max-width: 760px) {
+      .tier-row {
+        grid-template-columns: 1fr;
+      }
+
+      .tier-label {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+      }
+
+      .tier-actions {
+        border-left: none;
+        border-top: 1px solid #374151;
+      }
+
+      .movie-card {
+        width: 78px;
+        height: 112px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🎬 나만의 영화 티어리스트</h1>
+    <p>영화 이미지를 업로드하고 원하는 등급에 드래그 앤 드롭으로 배치하세요.</p>
+  </header>
+
+  <main>
+    <section class="toolbar">
+      <div class="toolbar-left">
+        <label for="imageInput" class="upload-label">이미지 업로드</label>
+        <input id="imageInput" type="file" accept="image/*" multiple />
+        <button class="btn-add" id="addTierBtn">티어 추가</button>
+      </div>
+
+      <div class="toolbar-right">
+        <button class="btn-reset" id="resetBtn">전체 초기화</button>
+      </div>
+    </section>
+
+    <section class="notice">
+      ✅ 티어 이름은 직접 수정할 수 있습니다.  
+      ✅ 이미지를 원하는 티어로 끌어다 놓으면 자동 저장됩니다.  
+      ✅ 새로고침하거나 브라우저를 다시 열어도 Local Storage에 저장된 내용이 유지됩니다.
+      <br />
+      ※ 단, Local Storage 용량 제한이 있으므로 너무 큰 이미지를 많이 올리면 저장이 어려울 수 있습니다.
+    </section>
+
+    <section id="tierList" class="tier-list"></section>
+
+    <section class="pool-section">
+      <div class="pool-header">
+        <h2>업로드한 영화 이미지</h2>
+        <span>아래 이미지를 티어로 드래그하세요</span>
+      </div>
+      <div id="imagePool" class="image-pool" data-zone="pool"></div>
+    </section>
+  </main>
+
+  <footer>
+    외부 서버 없이 브라우저에만 저장되는 개인용 영화 티어리스트입니다.
+  </footer>
+
+  <script>
+    const STORAGE_KEY = "movieTierListData_v1";
+
+    let data = {
+      tiers: [
+        { id: createId(), name: "S", color: "#f87171", items: [] },
+        { id: createId(), name: "A", color: "#fb923c", items: [] },
+        { id: createId(), name: "B", color: "#facc15", items: [] },
+        { id: createId(), name: "C", color: "#4ade80", items: [] },
+        { id: createId(), name: "D", color: "#60a5fa", items: [] }
+      ],
+      pool: [],
+      images: {}
+    };
+
+    const tierListEl = document.getElementById("tierList");
+    const imagePoolEl = document.getElementById("imagePool");
+    const imageInput = document.getElementById("imageInput");
+    const addTierBtn = document.getElementById("addTierBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    loadData();
+    render();
+
+    imageInput.addEventListener("change", handleImageUpload);
+    addTierBtn.addEventListener("click", addTier);
+    resetBtn.addEventListener("click", resetAll);
+
+    function createId() {
+      return "id_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (error) {
+        alert("저장 공간이 부족할 수 있습니다. 이미지 개수를 줄이거나 더 작은 이미지를 사용해 주세요.");
+        console.error(error);
+      }
+    }
+
+    function loadData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+
+      if (!saved) return;
+
+      try {
+        data = JSON.parse(saved);
+      } catch (error) {
+        console.error("저장된 데이터를 불러오지 못했습니다.", error);
+      }
+    }
+
+    function render() {
+      renderTiers();
+      renderPool();
+      saveData();
+    }
+
+    function renderTiers() {
+      tierListEl.innerHTML = "";
+
+      data.tiers.forEach((tier) => {
+        const row = document.createElement("div");
+        row.className = "tier-row";
+
+        const label = document.createElement("div");
+        label.className = "tier-label";
+        label.style.background = tier.color;
+
+        const nameInput = document.createElement("input");
+        nameInput.className = "tier-name";
+        nameInput.value = tier.name;
+        nameInput.title = "티어 이름 수정";
+        nameInput.addEventListener("input", () => {
+          tier.name = nameInput.value;
+          saveData();
+        });
+
+        const colorInput = document.createElement("input");
+        colorInput.className = "tier-color";
+        colorInput.type = "color";
+        colorInput.value = tier.color;
+        colorInput.title = "티어 색상 변경";
+        colorInput.addEventListener("input", () => {
+          tier.color = colorInput.value;
+          label.style.background = tier.color;
+          saveData();
+        });
+
+        label.appendChild(nameInput);
+        label.appendChild(colorInput);
+
+        const dropzone = document.createElement("div");
+        dropzone.className = "tier-dropzone";
+        dropzone.dataset.zone = tier.id;
+
+        tier.items.forEach((imageId) => {
+          const card = createMovieCard(imageId);
+          if (card) dropzone.appendChild(card);
+        });
+
+        if (tier.items.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "empty-message";
+          empty.textContent = "여기에 영화를 끌어다 놓으세요";
+          dropzone.appendChild(empty);
+        }
+
+        setupDropZone(dropzone);
+
+        const actions = document.createElement("div");
+        actions.className = "tier-actions";
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn-small btn-delete";
+        deleteBtn.textContent = "삭제";
+        deleteBtn.addEventListener("click", () => deleteTier(tier.id));
+
+        actions.appendChild(deleteBtn);
+
+        row.appendChild(label);
+        row.appendChild(dropzone);
+        row.appendChild(actions);
+
+        tierListEl.appendChild(row);
+      });
+    }
+
+    function renderPool() {
+      imagePoolEl.innerHTML = "";
+
+      data.pool.forEach((imageId) => {
+        const card = createMovieCard(imageId);
+        if (card) imagePoolEl.appendChild(card);
+      });
+
+      if (data.pool.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-message";
+        empty.textContent = "아직 업로드한 이미지가 없습니다.";
+        imagePoolEl.appendChild(empty);
+      }
+
+      setupDropZone(imagePoolEl);
+    }
+
+    function createMovieCard(imageId) {
+      const image = data.images[imageId];
+      if (!image) return null;
+
+      const card = document.createElement("div");
+      card.className = "movie-card";
+      card.draggable = true;
+      card.dataset.id = imageId;
+      card.title = image.name;
+
+      const img = document.createElement("img");
+      img.src = image.src;
+      img.alt = image.name;
+
+      const name = document.createElement("div");
+      name.className = "movie-name";
+      name.textContent = image.name;
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn-image-delete";
+      deleteBtn.textContent = "×";
+      deleteBtn.title = "이미지 삭제";
+      deleteBtn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        deleteImage(imageId);
+      });
+
+      card.addEventListener("dragstart", (event) => {
+        event.dataTransfer.setData("text/plain", imageId);
+        event.dataTransfer.effectAllowed = "move";
+             event.dataTransfer.effectAllowed = "move";
+      });
+
+      card.appendChild(img);
+      card.appendChild(name);
+      card.appendChild(deleteBtn);
+
+      return card;
+    }
+
+    function setupDropZone(zone) {
+      zone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+      });
+
+      zone.addEventListener("dragenter", (event) => {
+        event.preventDefault();
+        zone.classList.add("drop-hover");
+      });
+
+      zone.addEventListener("dragleave", () => {
+        zone.classList.remove("drop-hover");
+      });
+
+      zone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        zone.classList.remove("drop-hover");
+
+        const imageId = event.dataTransfer.getData("text/plain");
+        const targetZone = zone.dataset.zone;
+
+        if (!imageId || !targetZone) return;
+
+        moveImageToZone(imageId, targetZone);
+      });
+    }
+
+    function moveImageToZone(imageId, targetZone) {
+      // 기존 위치에서 이미지 제거
+      data.pool = data.pool.filter((id) => id !== imageId);
+
+      data.tiers.forEach((tier) => {
+        tier.items = tier.items.filter((id) => id !== imageId);
+      });
+
+      // 새 위치에 이미지 추가
+      if (targetZone === "pool") {
+        data.pool.push(imageId);
+      } else {
+        const targetTier = data.tiers.find((tier) => tier.id === targetZone);
+        if (targetTier) {
+          targetTier.items.push(imageId);
+        }
+      }
+
+      render();
+    }
+
+    function handleImageUpload(event) {
+      const files = Array.from(event.target.files);
+
+      files.forEach((file) => {
+        if (!file.type.startsWith("image/")) {
+          return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const imageId = createId();
+
+          data.images[imageId] = {
+            id: imageId,
+            name: file.name,
+            src: reader.result
+          };
+
+          data.pool.push(imageId);
+
+          render();
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+      // 같은 파일을 다시 업로드할 수 있도록 input 초기화
+      event.target.value = "";
+    }
+
+    function addTier() {
+      const newTier = {
+        id: createId(),
+        name: "새 티어",
+        color: "#a78bfa",
+        items: []
+      };
+
+      data.tiers.push(newTier);
+      render();
+    }
+
+    function deleteTier(tierId) {
+      const tier = data.tiers.find((item) => item.id === tierId);
+
+      if (!tier) return;
+
+      const confirmDelete = confirm(
+        "이 티어를 삭제할까요?\n티어 안에 있던 이미지는 업로드 이미지 영역으로 이동합니다."
+      );
+
+      if (!confirmDelete) return;
+
+      // 삭제되는 티어 안의 이미지는 다시 이미지 보관함으로 이동
+      tier.items.forEach((imageId) => {
+        if (!data.pool.includes(imageId)) {
+          data.pool.push(imageId);
+        }
+      });
+
+      data.tiers = data.tiers.filter((item) => item.id !== tierId);
+
+      render();
+    }
+
+    function deleteImage(imageId) {
+      const confirmDelete = confirm("이 이미지를 완전히 삭제할까요?");
+
+      if (!confirmDelete) return;
+
+      // 이미지 보관함에서 제거
+      data.pool = data.pool.filter((id) => id !== imageId);
+
+      // 모든 티어에서 제거
+      data.tiers.forEach((tier) => {
+        tier.items = tier.items.filter((id) => id !== imageId);
+      });
+
+      // 실제 이미지 데이터 삭제
+      delete data.images[imageId];
+
+      render();
+    }
+
+    function resetAll() {
+      const confirmReset = confirm(
+        "정말 전체 초기화할까요?\n티어, 이미지, 배치 정보가 모두 삭제됩니다."
+      );
+
+      if (!confirmReset) return;
+
+      localStorage.removeItem(STORAGE_KEY);
+
+      data = {
+        tiers: [
+          { id: createId(), name: "S", color: "#f87171", items: [] },
+          { id: createId(), name: "A", color: "#fb923c", items: [] },
+          { id: createId(), name: "B", color: "#facc15", items: [] },
+          { id: createId(), name: "C", color: "#4ade80", items: [] },
+          { id: createId(), name: "D", color: "#60a5fa", items: [] }
+        ],
+        pool: [],
+        images: {}
+      };
+
+      render();
+    }
+  </script>
+</body>
+</html>
